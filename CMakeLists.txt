@@ -13,6 +13,8 @@ set(sources
         src/Bitset.h
         src/globals.h
         src/utility.h
-        )
+        Google_test/test1.cpp)
 
 add_executable(formalki main.cpp ${sources})
+
+add_subdirectory(Google_test)
