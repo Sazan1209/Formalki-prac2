@@ -19,6 +19,7 @@ class NFA {
  public:
   NFA() = default;
   NFA(const NFA&) = default;
+  NFA& operator=(const NFA&) = default;
   explicit NFA(size_t size);
   NFA& operator=(NFA&& nfa) noexcept;
   void RemoveEps();
@@ -31,6 +32,7 @@ class NFA {
     State(const State&) = default;
     explicit State(size_t size);
     State(State&&) noexcept;
+    State& operator=(const State&) = default;
     State& operator=(State&&) noexcept;
     std::vector<std::vector<size_t>> moves;
     std::vector<Bitset> moves_bitset;

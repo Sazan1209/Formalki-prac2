@@ -6,14 +6,15 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(src)
 
 set(sources
-        src/Bitset.cpp
-        src/NFA.cpp
-        src/utility.cpp
-        src/NFA.h
-        src/Bitset.h
-        src/globals.h
-        src/utility.h
-        Google_test/test1.cpp)
+        ${PROJECT_SOURCE_DIR}/src/Bitset.cpp
+        ${PROJECT_SOURCE_DIR}/src/NFA.cpp
+        ${PROJECT_SOURCE_DIR}/src/utility.cpp
+        ${PROJECT_SOURCE_DIR}/src/NFA.h
+        ${PROJECT_SOURCE_DIR}/src/Bitset.h
+        ${PROJECT_SOURCE_DIR}/src/globals.h
+        ${PROJECT_SOURCE_DIR}/src/utility.h
+        ${PROJECT_SOURCE_DIR}/src/DFA.cpp
+        ${PROJECT_SOURCE_DIR}/src/DFA.h)
 
 add_executable(formalki main.cpp ${sources})
 

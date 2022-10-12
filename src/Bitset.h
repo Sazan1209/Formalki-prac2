@@ -12,6 +12,7 @@ class Bitset {
  public:
   Bitset() = default;
   Bitset(const Bitset&) = default;
+  Bitset& operator=(const Bitset&) = default;
   explicit Bitset(size_t size);
   Bitset(Bitset&& bitset) noexcept;
   Bitset& operator=(Bitset&& bitset) noexcept;
