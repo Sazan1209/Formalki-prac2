@@ -23,6 +23,7 @@ class DFA {
   bool ReadWord(const std::string& word);
   void Minimize();
   void DFS(Bitset& visited, size_t state);
+  std::string GetRegex();
 
  private:
   struct State{

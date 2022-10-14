@@ -4,7 +4,7 @@
 
 #include "DFA.h"
 size_t& DFA::State::operator[](size_t pos) { return moves[pos]; }
-DFA::State::State() : moves(kSigmaSize){ }
+DFA::State::State() : moves(kSigmaSize) {}
 
 void DFA::Minimize() {
   size_t accepting_states_num = accepting_states_.BitCount();
@@ -111,7 +111,7 @@ void DFA::MakeMDFA(std::vector<size_t>& classes) {
 
 bool DFA::ReadWord(const std::string& word) {
   size_t state = 0;
-  for (auto letter : word){
+  for (auto letter : word) {
     state = states_[state][LetterToNum(letter)];
   }
   return accepting_states_[state];
@@ -121,16 +121,16 @@ void DFA::Prune() {
   Bitset reachable_bitset(states_.size());
   DFS(reachable_bitset, 0);
   auto reachable = reachable_bitset.GetVals();
-  if (reachable.size() == states_.size()){
+  if (reachable.size() == states_.size()) {
     return;
   }
   std::unordered_map<size_t, size_t> re_num;
   Bitset new_accepting(reachable.size());
-  for (size_t i = 0; i < reachable.size(); ++i){
-    if (accepting_states_[reachable[i]]){
+  for (size_t i = 0; i < reachable.size(); ++i) {
+    if (accepting_states_[reachable[i]]) {
       new_accepting.Set(i);
     }
-    if (reachable[i] == i){
+    if (reachable[i] == i) {
       continue;
     }
     states_[i] = std::move(states_[reachable[i]]);
@@ -138,24 +138,24 @@ void DFA::Prune() {
   }
   states_.resize(reachable.size());
   accepting_states_ = new_accepting;
-  for (auto &state : states_){
-    for (auto &curr : state.moves){
+  for (auto& state : states_) {
+    for (auto& curr : state.moves) {
       curr = re_num[curr];
     }
   }
 }
 
 void DFA::DFS(Bitset& visited, size_t state) {
-  if (visited[state]){
+  if (visited[state]) {
     return;
   }
   visited.Set(state);
-  for (auto next : states_[state].moves){
+  for (auto next : states_[state].moves) {
     DFS(visited, next);
   }
 }
 
-DFA::DFA(const NFA& nfa){
+DFA::DFA(const NFA& nfa) {
   std::unordered_map<Bitset, size_t, BitsetHash> visited;
   std::queue<Bitset> queue;
   Bitset start(nfa.states_.size());
@@ -163,30 +163,90 @@ DFA::DFA(const NFA& nfa){
   visited[start] = 0;
   queue.push(std::move(start));
   size_t count = 0;
-  while (!queue.empty()){
+  while (!queue.empty()) {
     states_.emplace_back();
     Bitset& curr_bitset = queue.front();
     auto curr = curr_bitset.GetVals();
-    for (size_t letter = 0; letter < kSigmaSize; ++letter){
+    for (size_t letter = 0; letter < kSigmaSize; ++letter) {
       Bitset res(nfa.states_.size());
-      for (auto state : curr){
+      for (auto state : curr) {
         res |= nfa.states_[state].moves_bitset[letter];
       }
-      if (visited.find(res) == visited.end()){
+      if (visited.find(res) == visited.end()) {
         states_[states_.size() - 1][letter] = visited[res] = ++count;
         queue.push(std::move(res));
-      } else{
+      } else {
         states_[states_.size() - 1][letter] = visited[res];
       }
     }
     queue.pop();
   }
   accepting_states_.Resize(states_.size());
-  for (auto& curr : visited){
-    if (curr.first && nfa.accepting_states_){
+  for (auto& curr : visited) {
+    if (curr.first && nfa.accepting_states_) {
       accepting_states_.Set(curr.second);
     }
   }
 }
 
 size_t DFA::Size() { return states_.size(); }
+
+struct RegState {
+  std::unordered_set<size_t> prev_nodes;
+  std::unordered_map<size_t, std::string> next_nodes;
+};
+
+void Contract(size_t node_num, std::vector<RegState>& nodes) {
+  auto& curr = nodes[node_num];
+  std::string loop;
+  if (curr.next_nodes.find(node_num) != curr.next_nodes.end()) {
+    loop = "(" + curr.next_nodes[node_num] + ")*";
+  }
+  for (auto prev_num : curr.prev_nodes) {
+    for (auto& next : curr.next_nodes) {
+      if (next.first == node_num){
+        continue;
+      }
+      auto& prev = nodes[prev_num];
+      std::string move = "(" + prev.next_nodes[node_num] + ")" + loop + "(" +
+          next.second + ")";
+      if (prev.next_nodes.find(next.first) == prev.next_nodes.end()) {
+        prev.next_nodes[next.first] = move;
+      } else {
+        prev.next_nodes[next.first] += "+" + move;
+      }
+      nodes[next.first].prev_nodes.insert(prev_num);
+    }
+  }
+  for (auto prev : curr.prev_nodes){
+    nodes[prev].next_nodes.erase(node_num);
+  }
+  for (auto& next : curr.next_nodes){
+    nodes[next.first].prev_nodes.erase(node_num);
+  }
+}
+
+std::string DFA::GetRegex() {
+  std::vector<RegState> nodes(states_.size() + 1);
+  for (size_t i = 0; i < states_.size(); ++i) {
+    for (size_t letter = 0; letter < kSigmaSize; ++letter) {
+      size_t next = states_[i][letter];
+      if (nodes[i].next_nodes.find(next) == nodes[i].next_nodes.end()){
+        nodes[i].next_nodes[next] = NumToLetter(letter);
+      } else{
+        nodes[i].next_nodes[next] += "+";
+        nodes[i].next_nodes[next] += NumToLetter(letter);
+      }
+      if (next != i) {
+        nodes[next].prev_nodes.insert(i);
+      }
+    }
+    if (accepting_states_[i]) {
+      nodes[i].next_nodes[states_.size()] = "";
+    }
+  }
+  for (size_t i = 1; i < states_.size(); ++i) {
+    Contract(i, nodes);
+  }
+  return nodes[0].next_nodes[states_.size()];
+}

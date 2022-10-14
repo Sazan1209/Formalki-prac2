@@ -29,7 +29,6 @@ class Bitset {
   friend BitsetHash;
  private:
   std::vector<uint64_t> body_;
-  uint64_t last_mem_mask{};
   static size_t BitCount(uint64_t num);
   static size_t TwoLog(uint64_t digit);
 };

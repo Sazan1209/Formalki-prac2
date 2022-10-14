@@ -20,8 +20,6 @@ std::vector<size_t> Bitset::GetVals() {
 
 void Bitset::Resize(size_t size) {
   body_.resize((size - 1) / 64 + 1);
-  constexpr uint64_t one = 1;
-  last_mem_mask = (one << (size % 64)) - 1;
   Clear();
 }
 
@@ -43,14 +41,13 @@ size_t Bitset::BitCount(uint64_t num) {
   return num;
 }
 
-Bitset::Bitset(size_t size) : body_((size - 1) / 64 + 1, 0) {
-  constexpr uint64_t one = 1;
-  last_mem_mask = (one << (size % 64)) - 1;
-}
+Bitset::Bitset(size_t size) : body_((size - 1) / 64 + 1, 0) { }
+
 void Bitset::Set(size_t pos) {
   constexpr uint64_t one = 1;
   body_[pos / 64] |= (one << (pos % 64));
 }
+
 void Bitset::Clear() {
   for (auto& curr : body_) {
     curr = 0;

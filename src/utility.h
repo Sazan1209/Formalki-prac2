@@ -6,7 +6,10 @@
 #define FORMALKI__UTILITY_H_
 
 #include <cstddef>
+#include <string>
 #include "globals.h"
+#include "Bitset.h"
+#include <stack>
 
 size_t LetterToNum(char letter);
 

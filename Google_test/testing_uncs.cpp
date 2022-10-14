@@ -1,43 +1,25 @@
 //
-// Created by mikhail on 11.10.22.
+// Created by mikhail on 14.10.22.
 //
 
-#include "utility.h"
-
-size_t LetterToNum(char letter) {
-  for (size_t i = 0; i < kSigmaSize + 1; ++i) {
-    if (alphabet[i] == letter) {
-      return i;
-    }
-  }
-  return kEps;
-}
-
-char NumToLetter(size_t num) {
-  if (num >= kSigmaSize) {
-    return kCharEps;
-  }
-  return alphabet[num];
-}
+#include "testing_funcs.h"
 
 struct ParseState {
   bool Visited(size_t word_pos, size_t regex_pos, bool skip_plus);
   ParseState(const std::string& regex, const std::string& word);
-  std::string regex;
-  std::string word;
+  const std::string& regex;
+  const std::string& word;
   Bitset visited;
   Bitset is_iter;
   std::vector<size_t> next_closing;
   std::vector<size_t> prev_opening;
   std::vector<size_t> next_plus;
 };
+
 ParseState::ParseState(const std::string& regex, const std::string& word)
-    : visited(regex.size() * word.size() * 2),
+    : regex(regex), word(word), visited(regex.size() * (word.size() + 1) * 2),
       is_iter(regex.size()), next_closing(regex.size(), -1),
-      prev_opening(regex.size(), -1), next_plus(regex.size(), -1) {
-  this->regex = "(" + regex + ")";
-  this->word = word + "$";
-}
+      prev_opening(regex.size(), -1), next_plus(regex.size(), -1) {}
 
 bool ParseState::Visited(size_t word_pos, size_t regex_pos, bool skip_plus) {
   if (visited[(word_pos * regex.size() + regex_pos) * 2 + skip_plus]) {
@@ -95,6 +77,9 @@ bool ParseRegexRec(ParseState& state, size_t word_pos, size_t regex_pos,
   }
   if (curr == '1') {
     return ParseRegexRec(state, word_pos, regex_pos + 1);
+  }
+  if (state.word.size() <= word_pos){
+    return false;
   }
   if (curr == state.word[word_pos]) {
     return ParseRegexRec(state, word_pos + 1, regex_pos + 1);
