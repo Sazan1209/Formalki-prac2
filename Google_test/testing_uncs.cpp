@@ -29,15 +29,17 @@ bool ParseState::Visited(size_t word_pos, size_t regex_pos, bool skip_plus) {
   return false;
 }
 
+//Заранее прощу прощения
+
 bool ParseRegexRec(ParseState& state, size_t word_pos, size_t regex_pos,
                    bool skip_plus = true) {
-  if (state.Visited(word_pos, regex_pos, skip_plus)) {
-    return false;
-  }
   if (state.word.size() <= word_pos && state.regex.size() <= regex_pos) {
     return true;
   }
   if (state.regex.size() <= regex_pos) {
+    return false;
+  }
+  if (state.Visited(word_pos, regex_pos, skip_plus)) {
     return false;
   }
   char curr = state.regex[regex_pos];

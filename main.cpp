@@ -1,7 +1,7 @@
 #include "NFA.h"
 #include "DFA.h"
 #include <iostream>
-#include "../Google_test/testing_funcs.h"
+#include "../Google_test/testing_uncs.cpp"
 
 int main(){
   NFA nfa;

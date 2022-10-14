@@ -24,6 +24,7 @@ class DFA {
   void Minimize();
   void DFS(Bitset& visited, size_t state);
   std::string GetRegex();
+  void Complement();
 
  private:
   struct State{

@@ -191,37 +191,71 @@ DFA::DFA(const NFA& nfa) {
 
 size_t DFA::Size() { return states_.size(); }
 
+enum {
+  kEmpty = 0, kEpsilon, kLetter, kSum, kConcat, kIter
+};
+
+struct Regex {
+  std::string exp;
+  size_t desc = kEmpty;
+};
+
 struct RegState {
   std::unordered_set<size_t> prev_nodes;
-  std::unordered_map<size_t, std::string> next_nodes;
+  std::unordered_map<size_t, Regex> next_nodes;
 };
+
+void Iterate(Regex& regex){
+  if (regex.desc == kEmpty || regex.desc == kEpsilon || regex.desc == kIter){
+    return;
+  }
+  regex.exp = "(" + regex.exp + ")*";
+  regex.desc = kIter;
+}
+
+void Concat(Regex& prev, Regex& loop, Regex& next, Regex& res){
+  if (res.desc != kEmpty){
+    res.exp += "+";
+    res.desc = kSum;
+  } else{
+    res.desc = kConcat;
+  }
+  if (prev.desc == kSum){
+    res.exp += "(" + prev.exp + ")";
+  } else{
+    res.exp += prev.exp;
+  }
+  res.exp += loop.exp;
+  if (next.desc != kEpsilon){
+    if (next.desc == kSum){
+      res.exp += "(" + next.exp + ")";
+    } else{
+      res.exp += next.exp;
+    }
+  }
+}
 
 void Contract(size_t node_num, std::vector<RegState>& nodes) {
   auto& curr = nodes[node_num];
-  std::string loop;
-  if (curr.next_nodes.find(node_num) != curr.next_nodes.end()) {
-    loop = "(" + curr.next_nodes[node_num] + ")*";
-  }
+  Iterate(curr.next_nodes[node_num]);
   for (auto prev_num : curr.prev_nodes) {
+    if (prev_num == node_num){
+      continue;
+    }
     for (auto& next : curr.next_nodes) {
-      if (next.first == node_num){
+      if (next.first == node_num) {
         continue;
       }
       auto& prev = nodes[prev_num];
-      std::string move = "(" + prev.next_nodes[node_num] + ")" + loop + "(" +
-          next.second + ")";
-      if (prev.next_nodes.find(next.first) == prev.next_nodes.end()) {
-        prev.next_nodes[next.first] = move;
-      } else {
-        prev.next_nodes[next.first] += "+" + move;
-      }
+      Concat(prev.next_nodes[node_num], curr.next_nodes[node_num], next.second,
+             prev.next_nodes[next.first]);
       nodes[next.first].prev_nodes.insert(prev_num);
     }
   }
-  for (auto prev : curr.prev_nodes){
+  for (auto prev : curr.prev_nodes) {
     nodes[prev].next_nodes.erase(node_num);
   }
-  for (auto& next : curr.next_nodes){
+  for (auto& next : curr.next_nodes) {
     nodes[next.first].prev_nodes.erase(node_num);
   }
 }
@@ -231,22 +265,28 @@ std::string DFA::GetRegex() {
   for (size_t i = 0; i < states_.size(); ++i) {
     for (size_t letter = 0; letter < kSigmaSize; ++letter) {
       size_t next = states_[i][letter];
-      if (nodes[i].next_nodes.find(next) == nodes[i].next_nodes.end()){
-        nodes[i].next_nodes[next] = NumToLetter(letter);
-      } else{
-        nodes[i].next_nodes[next] += "+";
-        nodes[i].next_nodes[next] += NumToLetter(letter);
+      if (nodes[i].next_nodes.find(next) == nodes[i].next_nodes.end()) {
+        nodes[i].next_nodes[next].exp = NumToLetter(letter);
+        nodes[i].next_nodes[next].desc = kLetter;
+      } else {
+        nodes[i].next_nodes[next].exp += "+";
+        nodes[i].next_nodes[next].exp += NumToLetter(letter);
+        nodes[i].next_nodes[next].desc = kSum;
       }
       if (next != i) {
         nodes[next].prev_nodes.insert(i);
       }
     }
     if (accepting_states_[i]) {
-      nodes[i].next_nodes[states_.size()] = "";
+      nodes[i].next_nodes[states_.size()].exp = "1";
+      nodes[i].next_nodes[states_.size()].desc = kEpsilon;
     }
   }
   for (size_t i = 1; i < states_.size(); ++i) {
     Contract(i, nodes);
   }
-  return nodes[0].next_nodes[states_.size()];
+  Iterate(nodes[0].next_nodes[0]);
+  return nodes[0].next_nodes[0].exp + "(" + nodes[0].next_nodes[states_.size()].exp + ")";
 }
+
+void DFA::Complement() { accepting_states_.Complement(); }

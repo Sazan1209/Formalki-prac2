@@ -6,6 +6,7 @@
 
 #include "NFA.h"
 #include "DFA.h"
+#include "testing_funcs.h"
 #include <fstream>
 
 //regexp a*(ab + b)*b
@@ -20,11 +21,16 @@ class NFA_Fixture_1 : public ::testing::Test {
     dfa = DFA(nfa_without_eps);
     m_dfa = dfa;
     m_dfa.Minimize();
+    m_dfa_complement = m_dfa;
+    m_dfa_complement.Complement();
+    reg_exp = "(" + m_dfa.GetRegex() + ")";
   }
   NFA nfa;
   NFA nfa_without_eps;
   DFA dfa;
   DFA m_dfa;
+  DFA m_dfa_complement;
+  std::string reg_exp;
 };
 
 TEST_F(NFA_Fixture_1, ababab) {
@@ -34,6 +40,8 @@ TEST_F(NFA_Fixture_1, ababab) {
   EXPECT_EQ(nfa_without_eps.ReadWord(word), res);
   EXPECT_EQ(dfa.ReadWord(word), res);
   EXPECT_EQ(m_dfa.ReadWord(word), res);
+  EXPECT_EQ(ParseRegex(reg_exp, word), res);
+  EXPECT_EQ(m_dfa_complement.ReadWord(word), !res);
 }
 
 TEST_F(NFA_Fixture_1, ababb) {
@@ -43,6 +51,8 @@ TEST_F(NFA_Fixture_1, ababb) {
   EXPECT_EQ(nfa_without_eps.ReadWord(word), res);
   EXPECT_EQ(dfa.ReadWord(word), res);
   EXPECT_EQ(m_dfa.ReadWord(word), res);
+  EXPECT_EQ(ParseRegex(reg_exp, word), res);
+  EXPECT_EQ(m_dfa_complement.ReadWord(word), !res);
 }
 
 TEST_F(NFA_Fixture_1, b) {
@@ -52,6 +62,8 @@ TEST_F(NFA_Fixture_1, b) {
   EXPECT_EQ(nfa_without_eps.ReadWord(word), res);
   EXPECT_EQ(dfa.ReadWord(word), res);
   EXPECT_EQ(m_dfa.ReadWord(word), res);
+  EXPECT_EQ(ParseRegex(reg_exp, word), res);
+  EXPECT_EQ(m_dfa_complement.ReadWord(word), !res);
 }
 
 TEST_F(NFA_Fixture_1, aab) {
@@ -61,6 +73,8 @@ TEST_F(NFA_Fixture_1, aab) {
   EXPECT_EQ(nfa_without_eps.ReadWord(word), res);
   EXPECT_EQ(dfa.ReadWord(word), res);
   EXPECT_EQ(m_dfa.ReadWord(word), res);
+  EXPECT_EQ(ParseRegex(reg_exp, word), res);
+  EXPECT_EQ(m_dfa_complement.ReadWord(word), !res);
 }
 
 TEST_F(NFA_Fixture_1, e) {
@@ -70,6 +84,8 @@ TEST_F(NFA_Fixture_1, e) {
   EXPECT_EQ(nfa_without_eps.ReadWord(word), res);
   EXPECT_EQ(dfa.ReadWord(word), res);
   EXPECT_EQ(m_dfa.ReadWord(word), res);
+  EXPECT_EQ(ParseRegex(reg_exp, word), res);
+  EXPECT_EQ(m_dfa_complement.ReadWord(word), !res);
 }
 
 TEST_F(NFA_Fixture_1, min_dfa){
