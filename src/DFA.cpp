@@ -4,6 +4,7 @@
 
 #include "DFA.h"
 size_t& DFA::State::operator[](size_t pos) { return moves[pos]; }
+DFA::State::State() : moves(kSigmaSize){ }
 
 void DFA::Minimize() {
   size_t accepting_states_num = accepting_states_.BitCount();
@@ -154,3 +155,38 @@ void DFA::DFS(Bitset& visited, size_t state) {
   }
 }
 
+DFA::DFA(const NFA& nfa){
+  std::unordered_map<Bitset, size_t, BitsetHash> visited;
+  std::queue<Bitset> queue;
+  Bitset start(nfa.states_.size());
+  start.Set(0);
+  visited[start] = 0;
+  queue.push(std::move(start));
+  size_t count = 0;
+  while (!queue.empty()){
+    states_.emplace_back();
+    Bitset& curr_bitset = queue.front();
+    auto curr = curr_bitset.GetVals();
+    for (size_t letter = 0; letter < kSigmaSize; ++letter){
+      Bitset res(nfa.states_.size());
+      for (auto state : curr){
+        res |= nfa.states_[state].moves_bitset[letter];
+      }
+      if (visited.find(res) == visited.end()){
+        states_[states_.size() - 1][letter] = visited[res] = ++count;
+        queue.push(std::move(res));
+      } else{
+        states_[states_.size() - 1][letter] = visited[res];
+      }
+    }
+    queue.pop();
+  }
+  accepting_states_.Resize(states_.size());
+  for (auto& curr : visited){
+    if (curr.first && nfa.accepting_states_){
+      accepting_states_.Set(curr.second);
+    }
+  }
+}
+
+size_t DFA::Size() { return states_.size(); }

@@ -4,10 +4,6 @@
 
 #include "NFA.h"
 
-enum {
-  kNotVisited = -1
-};
-
 void NFA::RemoveEps() {
   Bitset visited(states_.size());
   for (size_t i = 0; i < states_.size(); ++i) {
@@ -123,11 +119,11 @@ void NFA::DFS(size_t state_num, Bitset& visited) {
   }
 }
 
-NFA& NFA::operator=(NFA&& nfa) noexcept {
-  states_ = std::move(nfa.states_);
-  accepting_states_ = std::move(nfa.accepting_states_);
-  return *this;
-}
+//NFA& NFA::operator=(NFA&& nfa) noexcept {
+//  states_ = std::move(nfa.states_);
+//  accepting_states_ = std::move(nfa.accepting_states_);
+//  return *this;
+//}
 
 NFA::NFA(size_t size) : accepting_states_(size) {
   states_.reserve(size);
@@ -197,6 +193,7 @@ bool NFA::ReadWordNonEps(const std::string& word, size_t pos,
   }
   return false;
 }
+
 bool NFA::ReadWordEps(const std::string& word, size_t pos, size_t state_num,
                       std::unordered_set<NFA::EpsState,
                                          NFA::EpsStateHash>& visited) {
@@ -228,16 +225,6 @@ NFA::State::State(size_t size) : moves_bitset(kSigmaSize + 1),
   for (auto& curr : moves_bitset) {
     curr.Resize(size);
   }
-}
-
-NFA::State::State(NFA::State&& state) noexcept:
-    moves_bitset(std::move(state.moves_bitset)),
-    moves(std::move(state.moves)) {}
-
-NFA::State& NFA::State::operator=(NFA::State&& state) noexcept {
-  moves = std::move(state.moves);
-  moves_bitset = std::move(state.moves_bitset);
-  return *this;
 }
 
 size_t NFA::EpsStateHash::operator()(const NFA::EpsState& eps_state) const {

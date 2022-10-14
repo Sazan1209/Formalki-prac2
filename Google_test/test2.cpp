@@ -1,19 +1,21 @@
 //
-// Created by mikhail on 12.10.22.
+// Created by mikhail on 14.10.22.
 //
 
 #include "gtest/gtest.h"
 
+#include <string>
+#include <fstream>
 #include "NFA.h"
 #include "DFA.h"
-#include <fstream>
 
-//regexp a*(ab + b)*b
-class NFA_Fixture_1 : public ::testing::Test {
+
+//regexp (a + b)^* b (a + b)^3
+class NFA_Fixture_2 : public ::testing::Test {
  public:
-  NFA_Fixture_1() {
+  NFA_Fixture_2() {
     std::string test_dir = TEST_DIR;
-    std::ifstream inp(test_dir + "/Automata1");
+    std::ifstream inp(test_dir + "/Automata2");
     inp >> nfa;
     nfa_without_eps = nfa;
     nfa_without_eps.RemoveEps();
@@ -27,7 +29,7 @@ class NFA_Fixture_1 : public ::testing::Test {
   DFA m_dfa;
 };
 
-TEST_F(NFA_Fixture_1, ababab) {
+TEST_F(NFA_Fixture_2, ababab) {
   auto word = "ababab";
   bool res = false;
   EXPECT_EQ(nfa.ReadWord(word), res);
@@ -36,7 +38,7 @@ TEST_F(NFA_Fixture_1, ababab) {
   EXPECT_EQ(m_dfa.ReadWord(word), res);
 }
 
-TEST_F(NFA_Fixture_1, ababb) {
+TEST_F(NFA_Fixture_2, ababb) {
   auto word = "ababb";
   bool res = true;
   EXPECT_EQ(nfa.ReadWord(word), res);
@@ -45,8 +47,8 @@ TEST_F(NFA_Fixture_1, ababb) {
   EXPECT_EQ(m_dfa.ReadWord(word), res);
 }
 
-TEST_F(NFA_Fixture_1, b) {
-  auto word = "b";
+TEST_F(NFA_Fixture_2, b) {
+  auto word = "bbbb";
   bool res = true;
   EXPECT_EQ(nfa.ReadWord(word), res);
   EXPECT_EQ(nfa_without_eps.ReadWord(word), res);
@@ -54,17 +56,8 @@ TEST_F(NFA_Fixture_1, b) {
   EXPECT_EQ(m_dfa.ReadWord(word), res);
 }
 
-TEST_F(NFA_Fixture_1, aab) {
+TEST_F(NFA_Fixture_2, aab) {
   auto word = "aab";
-  bool res = true;
-  EXPECT_EQ(nfa.ReadWord(word), res);
-  EXPECT_EQ(nfa_without_eps.ReadWord(word), res);
-  EXPECT_EQ(dfa.ReadWord(word), res);
-  EXPECT_EQ(m_dfa.ReadWord(word), res);
-}
-
-TEST_F(NFA_Fixture_1, e) {
-  auto word = "";
   bool res = false;
   EXPECT_EQ(nfa.ReadWord(word), res);
   EXPECT_EQ(nfa_without_eps.ReadWord(word), res);
@@ -72,6 +65,15 @@ TEST_F(NFA_Fixture_1, e) {
   EXPECT_EQ(m_dfa.ReadWord(word), res);
 }
 
-TEST_F(NFA_Fixture_1, min_dfa){
-  EXPECT_EQ(m_dfa.Size(), 5);
+TEST_F(NFA_Fixture_2, e) {
+  auto word = "ababababaabababa";
+  bool res = true;
+  EXPECT_EQ(nfa.ReadWord(word), res);
+  EXPECT_EQ(nfa_without_eps.ReadWord(word), res);
+  EXPECT_EQ(dfa.ReadWord(word), res);
+  EXPECT_EQ(m_dfa.ReadWord(word), res);
+}
+
+TEST_F(NFA_Fixture_2, min_dfa){
+  EXPECT_EQ(m_dfa.Size(), 16);
 }

@@ -8,29 +8,34 @@
 #include <vector>
 #include <cstdint>
 
+class BitsetHash;
+
 class Bitset {
  public:
-  Bitset() = default;
-  Bitset(const Bitset&) = default;
-  Bitset& operator=(const Bitset&) = default;
   explicit Bitset(size_t size);
-  Bitset(Bitset&& bitset) noexcept;
-  Bitset& operator=(Bitset&& bitset) noexcept;
+  Bitset() = default;
 
   void Set(size_t pos);
   void Clear();
   Bitset& operator|=(const Bitset& bitset);
+  bool operator==(const Bitset& bitset) const;
   bool operator[](size_t pos) const;
+  bool operator&&(const Bitset& bitset) const;
 
   std::vector<size_t> GetVals();
   void Resize(size_t size);
   [[nodiscard]] size_t BitCount() const;
 
+  friend BitsetHash;
  private:
   std::vector<uint64_t> body_;
   uint64_t last_mem_mask{};
   static size_t BitCount(uint64_t num);
   static size_t TwoLog(uint64_t digit);
+};
+
+struct BitsetHash{
+  size_t operator()(const Bitset& bitset) const;
 };
 
 #endif //FORMALKI__BITSET_H_

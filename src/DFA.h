@@ -11,25 +11,33 @@
 #include "Bitset.h"
 #include "globals.h"
 #include "utility.h"
+#include <queue>
+
+class NFA;
 
 class DFA {
  public:
+  size_t Size();
   DFA() = default;
+  explicit DFA(const NFA&);
   bool ReadWord(const std::string& word);
   void Minimize();
-  void Prune();
   void DFS(Bitset& visited, size_t state);
 
  private:
-  struct State {
+  struct State{
+    State();
     size_t& operator[](size_t pos);
     std::vector<size_t> moves;
   };
   std::vector<State> states_;
   Bitset accepting_states_;
+  void Prune();
   void ClassesInit(std::vector<size_t>& classes);
   void SeparateClasses(std::vector<size_t>& classes);
   void MakeMDFA(std::vector<size_t>& classes);
 };
+
+#include "NFA.h" //Спасибо c++ за наше счастливое детство
 
 #endif //FORMALKI_SRC_DFA_H_

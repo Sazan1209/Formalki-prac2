@@ -68,6 +68,7 @@ bool Bitset::operator[](size_t pos) const {
   constexpr uint64_t one = 1;
   return (body_[pos / 64] & (one << (pos % 64))) != 0;
 }
+
 size_t Bitset::TwoLog(uint64_t digit) {
   size_t res = 0;
   res += 32 * ((digit & 0xFFFFFFFF00000000) != 0);
@@ -79,12 +80,30 @@ size_t Bitset::TwoLog(uint64_t digit) {
   return res;
 }
 
-Bitset::Bitset(Bitset&& bitset) noexcept: body_(std::move(bitset.body_)),
-                                          last_mem_mask(bitset.last_mem_mask) {}
-
-Bitset& Bitset::operator=(Bitset&& bitset) noexcept {
-  body_ = std::move(bitset.body_);
-  last_mem_mask = bitset.last_mem_mask;
-  return *this;
+bool Bitset::operator==(const Bitset& bitset) const {
+  if (bitset.body_.size() != body_.size()){
+    return false;
+  }
+  for (size_t i = 0; i < body_.size(); ++i){
+    if (body_[i] != bitset.body_[i]){
+      return false;
+    }
+  }
+  return true;
+}
+bool Bitset::operator&&(const Bitset& bitset) const{
+  for (size_t i = 0; i < body_.size(); ++i) {
+    if ((body_[i] & bitset.body_[i]) != 0){
+      return true;
+    }
+  }
+  return false;
 }
 
+size_t BitsetHash::operator()(const Bitset& bitset) const {
+  size_t res = 0;
+  for (auto curr : bitset.body_){
+    res ^= curr;
+  }
+  return res;
+}
